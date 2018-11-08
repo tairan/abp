@@ -31,7 +31,7 @@ namespace Volo.AbpWebSite.EntityFrameworkCore.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(128);
+                        .HasMaxLength(256);
 
                     b.Property<string>("Regex")
                         .HasMaxLength(512);
@@ -54,6 +54,15 @@ namespace Volo.AbpWebSite.EntityFrameworkCore.Migrations
                         .ValueGeneratedOnAdd();
 
                     b.Property<string>("ConcurrencyStamp");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnName("IsDefault");
+
+                    b.Property<bool>("IsPublic")
+                        .HasColumnName("IsPublic");
+
+                    b.Property<bool>("IsStatic")
+                        .HasColumnName("IsStatic");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -248,9 +257,10 @@ namespace Volo.AbpWebSite.EntityFrameworkCore.Migrations
                     b.Property<Guid>("UserId");
 
                     b.Property<string>("LoginProvider")
-                        .HasMaxLength(128);
+                        .HasMaxLength(64);
 
-                    b.Property<string>("Name");
+                    b.Property<string>("Name")
+                        .HasMaxLength(128);
 
                     b.Property<Guid?>("TenantId");
 
@@ -587,7 +597,12 @@ namespace Volo.AbpWebSite.EntityFrameworkCore.Migrations
 
                     b.Property<string>("GoogleCustomSearchId");
 
+                    b.Property<string>("LatestVersionBranchName")
+                        .HasMaxLength(128);
+
                     b.Property<string>("MainWebsiteUrl");
+
+                    b.Property<string>("MinimumVersion");
 
                     b.Property<string>("Name")
                         .IsRequired()
