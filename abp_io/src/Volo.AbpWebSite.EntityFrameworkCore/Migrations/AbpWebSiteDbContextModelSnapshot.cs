@@ -627,8 +627,6 @@ namespace Volo.AbpWebSite.EntityFrameworkCore.Migrations
 
                     b.Property<string>("Format");
 
-                    b.Property<string>("GoogleCustomSearchId");
-
                     b.Property<string>("LatestVersionBranchName")
                         .HasMaxLength(128);
 

@@ -12,7 +12,6 @@ namespace Volo.Docs.Documents
         [StringLength(DocumentConsts.MaxNameLength)]
         public string Name { get; set; }
 
-        [Required]
         [StringLength(ProjectConsts.MaxVersionNameLength)]
         public string Version { get; set; }
     }
