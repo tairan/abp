@@ -3,7 +3,6 @@ using System.Linq;
 using Localization.Resources.AbpUi;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MyCompanyName.MyProjectName.EntityFrameworkCore;
 using MyCompanyName.MyProjectName.Localization.MyProjectName;
@@ -21,7 +20,6 @@ using Volo.Abp.AspNetCore.Mvc.UI.Theme.Basic;
 using Volo.Abp.AspNetCore.Mvc.UI.Theme.Shared;
 using Volo.Abp.Autofac;
 using Volo.Abp.AutoMapper;
-using Volo.Abp.Data;
 using Volo.Abp.Identity;
 using Volo.Abp.Identity.Web;
 using Volo.Abp.Localization;
@@ -66,59 +64,57 @@ namespace MyCompanyName.MyProjectName
             var hostingEnvironment = context.Services.GetHostingEnvironment();
             var configuration = context.Services.GetConfiguration();
 
-            ConfigureDatabaseServices(context.Services, configuration);
-            ConfigureAutoMapper(context.Services);
-            ConfigureVirtualFileSystem(context.Services, hostingEnvironment);
-            ConfigureLocalizationServices(context.Services);
-            ConfigureNavigationServices(context.Services);
-            ConfigureAutoApiControllers(context.Services);
+            ConfigureDatabaseServices();
+            ConfigureAutoMapper();
+            ConfigureVirtualFileSystem(hostingEnvironment);
+            ConfigureLocalizationServices();
+            ConfigureNavigationServices();
+            ConfigureAutoApiControllers();
             ConfigureSwaggerServices(context.Services);
         }
 
-        private static void ConfigureDatabaseServices(IServiceCollection services, IConfigurationRoot configuration)
+        private void ConfigureDatabaseServices()
         {
-            services.Configure<DbConnectionOptions>(options =>
-            {
-                options.ConnectionStrings.Default = configuration.GetConnectionString("Default");
-            });
             //<TEMPLATE-REMOVE IF-NOT='EntityFrameworkCore'>
-
-            services.Configure<AbpDbContextOptions>(options => { options.UseSqlServer(); });
+            Configure<AbpDbContextOptions>(options =>
+            {
+                options.UseSqlServer();
+            });
             //</TEMPLATE-REMOVE>
         }
 
-        private static void ConfigureAutoMapper(IServiceCollection services)
+        private void ConfigureAutoMapper()
         {
-            services.Configure<AbpAutoMapperOptions>(options =>
+            Configure<AbpAutoMapperOptions>(options =>
             {
                 options.AddProfile<MyProjectNameWebAutoMapperProfile>();
             });
         }
 
-        private static void ConfigureVirtualFileSystem(IServiceCollection services, IHostingEnvironment hostingEnvironment)
+        private void ConfigureVirtualFileSystem(IHostingEnvironment hostingEnvironment)
         {
             if (hostingEnvironment.IsDevelopment())
             {
-                services.Configure<VirtualFileSystemOptions>(options =>
+                Configure<VirtualFileSystemOptions>(options =>
                 {
-                    options.FileSets.ReplaceEmbeddedByPyhsical<MyProjectNameDomainModule>(Path.Combine(hostingEnvironment.ContentRootPath, string.Format("..{0}MyCompanyName.MyProjectName.Domain", Path.DirectorySeparatorChar)));
+                    options.FileSets.ReplaceEmbeddedByPhysical<MyProjectNameDomainModule>(Path.Combine(hostingEnvironment.ContentRootPath, string.Format("..{0}MyCompanyName.MyProjectName.Domain", Path.DirectorySeparatorChar)));
                     //<TEMPLATE-REMOVE>
-                    options.FileSets.ReplaceEmbeddedByPyhsical<AbpUiModule>(Path.Combine(hostingEnvironment.ContentRootPath, string.Format("..{0}..{0}..{0}..{0}framework{0}src{0}Volo.Abp.UI", Path.DirectorySeparatorChar)));
-                    options.FileSets.ReplaceEmbeddedByPyhsical<AbpAspNetCoreMvcUiModule>(Path.Combine(hostingEnvironment.ContentRootPath, string.Format("..{0}..{0}..{0}..{0}framework{0}src{0}Volo.Abp.AspNetCore.Mvc.UI", Path.DirectorySeparatorChar)));
-                    options.FileSets.ReplaceEmbeddedByPyhsical<AbpAspNetCoreMvcUiBootstrapModule>(Path.Combine(hostingEnvironment.ContentRootPath, string.Format("..{0}..{0}..{0}..{0}framework{0}src{0}Volo.Abp.AspNetCore.Mvc.UI.Bootstrap", Path.DirectorySeparatorChar)));
-                    options.FileSets.ReplaceEmbeddedByPyhsical<AbpAspNetCoreMvcUiThemeSharedModule>(Path.Combine(hostingEnvironment.ContentRootPath, string.Format("..{0}..{0}..{0}..{0}framework{0}src{0}Volo.Abp.AspNetCore.Mvc.UI.Theme.Shared", Path.DirectorySeparatorChar)));
-                    options.FileSets.ReplaceEmbeddedByPyhsical<AbpAspNetCoreMvcUiBasicThemeModule>(Path.Combine(hostingEnvironment.ContentRootPath, string.Format("..{0}..{0}..{0}..{0}framework{0}src{0}Volo.Abp.AspNetCore.Mvc.UI.Theme.Basic", Path.DirectorySeparatorChar)));
-                    options.FileSets.ReplaceEmbeddedByPyhsical<AbpPermissionManagementWebModule>(Path.Combine(hostingEnvironment.ContentRootPath, string.Format("..{0}..{0}..{0}..{0}modules{0}permission-management{0}src{0}Volo.Abp.PermissionManagement.Web", Path.DirectorySeparatorChar)));
-                    options.FileSets.ReplaceEmbeddedByPyhsical<AbpIdentityWebModule>(Path.Combine(hostingEnvironment.ContentRootPath, string.Format("..{0}..{0}..{0}..{0}modules{0}identity{0}src{0}Volo.Abp.Identity.Web", Path.DirectorySeparatorChar)));
-                    options.FileSets.ReplaceEmbeddedByPyhsical<AbpAccountWebModule>(Path.Combine(hostingEnvironment.ContentRootPath, string.Format("..{0}..{0}..{0}..{0}modules{0}account{0}src{0}Volo.Abp.Account.Web", Path.DirectorySeparatorChar)));
+                    options.FileSets.ReplaceEmbeddedByPhysical<AbpUiModule>(Path.Combine(hostingEnvironment.ContentRootPath, string.Format("..{0}..{0}..{0}..{0}framework{0}src{0}Volo.Abp.UI", Path.DirectorySeparatorChar)));
+                    options.FileSets.ReplaceEmbeddedByPhysical<AbpAspNetCoreMvcUiModule>(Path.Combine(hostingEnvironment.ContentRootPath, string.Format("..{0}..{0}..{0}..{0}framework{0}src{0}Volo.Abp.AspNetCore.Mvc.UI", Path.DirectorySeparatorChar)));
+                    options.FileSets.ReplaceEmbeddedByPhysical<AbpAspNetCoreMvcUiBootstrapModule>(Path.Combine(hostingEnvironment.ContentRootPath, string.Format("..{0}..{0}..{0}..{0}framework{0}src{0}Volo.Abp.AspNetCore.Mvc.UI.Bootstrap", Path.DirectorySeparatorChar)));
+                    options.FileSets.ReplaceEmbeddedByPhysical<AbpAspNetCoreMvcUiThemeSharedModule>(Path.Combine(hostingEnvironment.ContentRootPath, string.Format("..{0}..{0}..{0}..{0}framework{0}src{0}Volo.Abp.AspNetCore.Mvc.UI.Theme.Shared", Path.DirectorySeparatorChar)));
+                    options.FileSets.ReplaceEmbeddedByPhysical<AbpAspNetCoreMvcUiBasicThemeModule>(Path.Combine(hostingEnvironment.ContentRootPath, string.Format("..{0}..{0}..{0}..{0}framework{0}src{0}Volo.Abp.AspNetCore.Mvc.UI.Theme.Basic", Path.DirectorySeparatorChar)));
+                    options.FileSets.ReplaceEmbeddedByPhysical<AbpPermissionManagementWebModule>(Path.Combine(hostingEnvironment.ContentRootPath, string.Format("..{0}..{0}..{0}..{0}modules{0}permission-management{0}src{0}Volo.Abp.PermissionManagement.Web", Path.DirectorySeparatorChar)));
+                    options.FileSets.ReplaceEmbeddedByPhysical<AbpIdentityWebModule>(Path.Combine(hostingEnvironment.ContentRootPath, string.Format("..{0}..{0}..{0}..{0}modules{0}identity{0}src{0}Volo.Abp.Identity.Web", Path.DirectorySeparatorChar)));
+                    options.FileSets.ReplaceEmbeddedByPhysical<AbpAccountWebModule>(Path.Combine(hostingEnvironment.ContentRootPath, string.Format("..{0}..{0}..{0}..{0}modules{0}account{0}src{0}Volo.Abp.Account.Web", Path.DirectorySeparatorChar)));
 					//</TEMPLATE-REMOVE>
                 });
             }
         }
 
-        private static void ConfigureLocalizationServices(IServiceCollection services)
+        private void ConfigureLocalizationServices()
         {
-            services.Configure<AbpLocalizationOptions>(options =>
+            Configure<AbpLocalizationOptions>(options =>
             {
                 options.Resources
                     .Get<MyProjectNameResource>()
@@ -134,29 +130,30 @@ namespace MyCompanyName.MyProjectName
             });
         }
 
-        private static void ConfigureNavigationServices(IServiceCollection services)
+        private void ConfigureNavigationServices()
         {
-            services.Configure<NavigationOptions>(options =>
+            Configure<NavigationOptions>(options =>
             {
                 options.MenuContributors.Add(new MyProjectNameMenuContributor());
             });
         }
 
-        private static void ConfigureAutoApiControllers(IServiceCollection services)
+        private void ConfigureAutoApiControllers()
         {
-            services.Configure<AbpAspNetCoreMvcOptions>(options =>
+            Configure<AbpAspNetCoreMvcOptions>(options =>
             {
                 options.ConventionalControllers.Create(typeof(MyProjectNameApplicationModule).Assembly);
             });
         }
 
-        private static void ConfigureSwaggerServices(IServiceCollection services)
+        private void ConfigureSwaggerServices(IServiceCollection services)
         {
             services.AddSwaggerGen(
                 options =>
                 {
                     options.SwaggerDoc("v1", new Info { Title = "MyProjectName API", Version = "v1" });
                     options.DocInclusionPredicate((docName, description) => true);
+                    options.CustomSchemaIds(type => type.FullName);
                 });
         }
 
@@ -186,16 +183,7 @@ namespace MyCompanyName.MyProjectName
 
             app.UseAuditing();
 
-            app.UseMvc(routes =>
-            {
-                routes.MapRoute(
-                    name: "defaultWithArea",
-                    template: "{area}/{controller=Home}/{action=Index}/{id?}");
-
-                routes.MapRoute(
-                    name: "default",
-                    template: "{controller=Home}/{action=Index}/{id?}");
-            });
+            app.UseMvcWithDefaultRouteAndArea();
 
             SeedDatabase(context);
         }
