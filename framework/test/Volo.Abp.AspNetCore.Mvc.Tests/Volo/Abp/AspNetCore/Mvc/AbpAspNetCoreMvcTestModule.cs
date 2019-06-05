@@ -6,7 +6,6 @@ using Volo.Abp.AspNetCore.Mvc.Authorization;
 using Volo.Abp.AspNetCore.Mvc.Localization;
 using Volo.Abp.AspNetCore.Mvc.Localization.Resource;
 using Volo.Abp.AspNetCore.TestBase;
-using Volo.Abp.Authorization.Permissions;
 using Volo.Abp.Autofac;
 using Volo.Abp.Localization;
 using Volo.Abp.Localization.Resources.AbpValidation;
@@ -57,11 +56,6 @@ namespace Volo.Abp.AspNetCore.Mvc
                 });
             });
 
-            Configure<PermissionOptions>(options =>
-            {
-                options.DefinitionProviders.Add<TestPermissionDefinitionProvider>();
-            });
-
             Configure<VirtualFileSystemOptions>(options =>
             {
                 options.FileSets.AddEmbedded<AbpAspNetCoreMvcTestModule>();
@@ -82,6 +76,7 @@ namespace Volo.Abp.AspNetCore.Mvc
         {
             var app = context.GetApplicationBuilder();
 
+            app.UseCorrelationId();
             app.UseMiddleware<FakeAuthenticationMiddleware>();
             app.UseAuditing();
             app.UseUnitOfWork();

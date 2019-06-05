@@ -42,6 +42,10 @@
       ]
     },
     {
+      "text": "CLI",
+      "path": "CLI.md"
+    },
+    {
       "text": "基础知识",
       "items": [
         {
@@ -144,6 +148,7 @@
     },
     {
       "text": "领域驱动设计",
+      "path": "Domain-Driven-Design.md",
       "items": [
         {
           "text": "领域层",
@@ -160,7 +165,8 @@
               "path": "Repositories.md"
             },
             {
-              "text": "领域服务"
+              "text": "领域服务",
+              "path": "Domain-Services.md"
             },
             {
               "text": "规约"
@@ -171,7 +177,8 @@
           "text": "应用服务层",
           "items": [
             {
-              "text": "应用服务"
+              "text": "应用服务",
+              "path": "Application-Services.md"
             },
             {
               "text": "数据传输对象(DTO)"
@@ -188,7 +195,7 @@
       "items": [
         {
           "text": "API",
-           "items": [            
+           "items": [
              {
                "text": "自动API控制器",
                "path": "AspNetCore/Auto-API-Controllers.md"
@@ -255,7 +262,28 @@
       ]
     },
     {
+      "text": "示例",
+      "items": [
+        {
+          "text": "微服务示例",
+          "path": "Samples/Microservice-Demo.md"
+        }
+      ]
+    },
+    {
+      "text": "应用模块",
+      "path": "Modules/Index.md"
+    },
+    {
+      "text": "微服务架构",
+      "path": "Microservice-Architecture.md"
+    },
+    {
       "text": "测试"
+    },
+    {
+      "text": "每日构建",
+      "path": "Nightly-Builds.md"
     },
     {
       "text": "贡献指南",

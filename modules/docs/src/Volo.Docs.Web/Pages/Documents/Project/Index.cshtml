@@ -45,7 +45,7 @@
                     <nav class="navbar navbar-logo">
                         @if (!Model.Project.Name.IsNullOrWhiteSpace())
                         {
-                            <a class="navbar-brand w-100" href="@Model.CreateLink(Model.LatestVersionInfo, Model.GetSpecificVersionOrLatest())">
+                            <a class="navbar-brand w-100" href="@Model.CreateVersionLink(Model.LatestVersionInfo, Model.GetSpecificVersionOrLatest())">
                                 <span id="ProjectName">@Model.Project.Name</span><br>
                                 <strong class="display-block">
                                     @L["Documents"]
@@ -72,12 +72,23 @@
                 </div>
 
                 <div class="docs-tree-list">
-                    <div class="docs-filter">
-                        <input class="form-control" type="search" placeholder="Filter topics" aria-label="Filter">
-                        <span class="my-2 filter-icon my-sm-0">
-                            <i class="fa fa-filter"></i>
-                        </span>
-                    </div>
+
+                    @if (Model.ProjectSelectItems.Count > 1)
+                    {
+                        <div class="docs-version">
+                            <div class="version-select">
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <label class="input-group-text">
+                                            <i class="fa fa-folder-open" aria-hidden="true" data-toggle="tooltip" title="@L["Project"]"></i>
+                                        </label>
+                                    </div>
+
+                                    <select asp-items="Model.ProjectSelectItems" class="form-control" onchange="window.location.replace(this.value)"></select>
+                                </div>
+                            </div>
+                        </div>
+                    }
 
                     @if (Model.VersionSelectItems.Any())
                     {
@@ -85,14 +96,28 @@
                             <div class="version-select">
                                 <div class="input-group">
                                     <div class="input-group-prepend">
-                                        <label class="input-group-text">@L["Version"]</label>
+                                        <label class="input-group-text">
+                                            <i class="fa fa-check-square-o" aria-hidden="true" data-toggle="tooltip" title="@L["Version"]"></i>
+                                        </label>
                                     </div>
 
-                                    <select asp-items="Model.VersionSelectItems" class="form-control" onchange="window.location.replace(this.value)"></select>
+                                    <select asp-items="Model.VersionSelectItems" class="form-control" onchange="if (this.value) { window.location.replace(this.value) }"></select>
                                 </div>
                             </div>
                         </div>
                     }
+
+                    <div class="docs-version">
+                        <div class="version-select">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <label class="input-group-text"><i class="fa fa-filter"></i></label>
+                                </div>
+
+                                <input class="form-control" type="search" placeholder="Filter topics" aria-label="Filter">
+                            </div>
+                        </div>
+                    </div>
 
                     @if (Model.Navigation == null || Model.Navigation.Content.IsNullOrEmpty())
                     {
@@ -107,6 +132,7 @@
                             project-name="@Model.ProjectName"
                             project-format="@Model.Project.Format"
                             selected-document-name="@Model.DocumentNameWithExtension"
+                            language="@Model.LanguageCode"
                             id="sidebar-scroll"
                             class="nav nav-list"></ul>
                     }
@@ -118,7 +144,6 @@
         @if (Model.Document != null)
         {
             <div class="col-md-7 docs-content bg-white">
-
                 <div class="docs-link-btns">
                     <div class="float-left">
                         @(L["ShareOn"].Value + " :")
@@ -133,31 +158,44 @@
                         </a>
                     </div>
 
-                    @if (!string.IsNullOrEmpty(Model.Document.EditLink))
-                    {
-                        <a href="@Model.Document.EditLink" target="_blank"> <i class="fa fa-edit"></i> @L["Edit"]</a>
-                    }
+                    <div class="float-right">
+                        @if (Model.LanguageSelectListItems.Count > 1)
+                        {
+                                <select asp-items="Model.LanguageSelectListItems" class="mr-2" onchange="window.location.replace(this.value)"></select>
+                        }
+
+                        @if (!string.IsNullOrEmpty(Model.Document.EditLink))
+                        {
+                            <a href="@Model.Document.EditLink" target="_blank"> <i class="fa fa-edit"></i> @L["Edit"]</a>
+                        }
+                    </div>
                 </div>
 
-                <div class="docs-content-field"> 
-                        <div class="position-relative">
-                        <div class="contributors">
-                            @if (Model.Document.Contributors.Count > 0)
-                            {
+                <div class="docs-content-field">
+                    <div class="position-relative">
+                        @if (Model.Document.Contributors != null && Model.Document.Contributors.Count > 0)
+                        {
+                            <div class="contributors">
                                 <small class="text-muted">@(L["Contributors"].Value + " :")</small>
-                            }
-                            @foreach (var contributor in Model.Document.Contributors)
-                            {
-                                <a href="@contributor.UserProfileUrl" target="_blank">
-                                    <img src="@contributor.AvatarUrl"
-                                         class="contributors-avatar" height="21" width="21" title="@contributor.Username" />
-                                </a>
-                            }
-                        </div> 
-                        </div> 
+                                @foreach (var contributor in Model.Document.Contributors)
+                                {
+                                    <a href="@contributor.UserProfileUrl" target="_blank">
+                                        <img src="@contributor.AvatarUrl"
+                                             class="contributors-avatar" height="21" width="21" title="@contributor.Username" />
+                                    </a>
+                                }
+                            </div>
+                        }
+                    </div>
                     <div class="docs-text-field">
                         <div data-spy="scroll" data-target="#docs-sticky-index" data-offset="0">
                             <article class="docs-body">
+                                @if (Model.DocumentLanguageIsDifferent)
+                                {
+                                    <abp-alert  alert-type="Warning" dismissible="true" class="mb-0">
+                                        Document in the language you wanted is not found. Document in the default language is shown.
+                                    </abp-alert>
+                                }
                                 @Html.Raw(Model.Document.Content)
                             </article>
                         </div>

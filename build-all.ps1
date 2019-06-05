@@ -9,6 +9,7 @@ $solutionPaths = (
     "modules/users",
     "modules/permission-management",
     "modules/setting-management",
+    "modules/feature-management",
     "modules/identity",
     "modules/identityserver",
     "modules/tenant-management",
@@ -17,10 +18,11 @@ $solutionPaths = (
     "modules/blogging",
     "modules/audit-logging",
     "modules/background-jobs",
+    "modules/client-simulation",
     "abp_io",
-    "templates/module",
-    "templates/service",
-    "templates/mvc"
+    "templates/mvc-module",
+    "templates/mvc",
+    "samples/MicroserviceDemo"
 )
 
 # Build all solutions

@@ -1,10 +1,10 @@
 ﻿(function ($) {
 
     $(function () {
-
         var initNavigationFilter = function (navigationContainerId) {
-
+         
             var $navigation = $("#" + navigationContainerId);
+
 
             var getShownDocumentLinks = function () {
                 return $navigation.find(".mCSB_container > li a:visible").not(".tree-toggle");
@@ -57,7 +57,7 @@
                 });
             };
 
-            $(".docs-page .docs-filter input[type='search']").keyup(function (e) {
+            $(".docs-page .docs-tree-list input[type='search']").keyup(function (e) {
                 filterDocumentItems(e.target.value);
 
                 if (e.key === "Enter") {

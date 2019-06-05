@@ -42,6 +42,10 @@
       ]
     },
     {
+      "text": "CLI",
+      "path": "CLI.md"
+    },
+    {
       "text": "Fundamentals",
       "items": [
         {
@@ -257,11 +261,28 @@
       ]
     },
     {
+      "text": "Samples",
+      "items": [
+        {
+          "text": "Microservice Demo",
+          "path": "Samples/Microservice-Demo.md"
+        }
+      ]
+    },
+    {
       "text": "Application Modules",
       "path": "Modules/Index.md"
     },
     {
+      "text": "Microservice Architecture",
+      "path": "Microservice-Architecture.md"
+    },
+    {
       "text": "Testing"
+    },
+    {
+      "text": "Nightly Builds",
+      "path": "Nightly-Builds.md"
     },
     {
       "text": "Contribution Guide",

@@ -1,6 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Mongo2Go;
+﻿using Mongo2Go;
 using Volo.Abp.Data;
+using Volo.Abp.Identity.MongoDB;
 using Volo.Abp.IdentityServer.MongoDB;
 using Volo.Abp.Modularity;
 
@@ -9,7 +9,8 @@ namespace Volo.Abp.IdentityServer
 
     [DependsOn(
         typeof(AbpIdentityServerTestBaseModule),
-        typeof(AbpIdentityServerMongoDbModule)
+        typeof(AbpIdentityServerMongoDbModule),
+        typeof(AbpIdentityMongoDbModule)
     )]
     public class AbpIdentityServerMongoDbTestModule : AbpModule
     {

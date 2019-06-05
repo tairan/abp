@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using Microsoft.Extensions.Localization;
+using Volo.Abp.AspNetCore.Mvc.UI.Bootstrap.TagHelpers.Extensions;
 
 namespace Volo.Abp.AspNetCore.Mvc.UI.Bootstrap.TagHelpers.Form
 {
@@ -24,13 +25,13 @@ namespace Volo.Abp.AspNetCore.Mvc.UI.Bootstrap.TagHelpers.Form
             var selectItems = GetSelectItems(context,output);
             SetSelectedValue(context, output, selectItems);
 
-            var order = GetInputOrder(TagHelper.AspFor.ModelExplorer);
+            var order = TagHelper.AspFor.ModelExplorer.GetDisplayOrder();
 
             var html = GetHtml(context, output, selectItems);
 
-            AddGroupToFormGroupContents(context, TagHelper.AspFor.Name, html, order, out var surpress);
+            AddGroupToFormGroupContents(context, TagHelper.AspFor.Name, html, order, out var suppress);
 
-            if (surpress)
+            if (suppress)
             {
                 output.SuppressOutput();
             }
@@ -78,7 +79,7 @@ namespace Volo.Abp.AspNetCore.Mvc.UI.Bootstrap.TagHelpers.Form
                 return GetSelectItemsFromEnum(context, output, TagHelper.AspFor.ModelExplorer);
             }
 
-            var selectItemsAttribute = GetAttribute<SelectItems>(TagHelper.AspFor.ModelExplorer);
+            var selectItemsAttribute = TagHelper.AspFor.ModelExplorer.GetAttribute<SelectItems>();
             if (selectItemsAttribute != null)
             {
                 return GetSelectItemsFromAttribute(selectItemsAttribute, TagHelper.AspFor.ModelExplorer);
@@ -154,6 +155,21 @@ namespace Volo.Abp.AspNetCore.Mvc.UI.Bootstrap.TagHelpers.Form
             }
 
             return TagHelper.AspFor.ModelExplorer.Model?.ToString();
+        }
+
+        protected virtual void AddGroupToFormGroupContents(TagHelperContext context, string propertyName, string html, int order, out bool suppress)
+        {
+            var list = context.GetValue<List<FormGroupItem>>(FormGroupContents) ?? new List<FormGroupItem>();
+            suppress = list == null;
+
+            if (list != null && !list.Any(igc => igc.HtmlContent.Contains("id=\"" + propertyName.Replace('.', '_') + "\"")))
+            {
+                list.Add(new FormGroupItem
+                {
+                    HtmlContent = html,
+                    Order = order
+                });
+            }
         }
     }
 }

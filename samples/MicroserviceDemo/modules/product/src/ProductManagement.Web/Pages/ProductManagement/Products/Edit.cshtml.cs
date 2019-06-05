@@ -1,10 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Volo.Abp.AspNetCore.Mvc.UI.RazorPages;
 
 namespace ProductManagement.Pages.ProductManagement.Products
@@ -14,22 +11,18 @@ namespace ProductManagement.Pages.ProductManagement.Products
         private readonly IProductAppService _productAppService;
 
         [BindProperty]
-        public ProductEditModalView Product { get; set; } = new ProductEditModalView();
+        public ProductEditViewModel Product { get; set; } = new ProductEditViewModel();
 
         public EditModel(IProductAppService productAppService)
         {
             _productAppService = productAppService;
         }
 
-        public void OnGet()
-        {
-        }
-
         public async Task<ActionResult> OnGetAsync(Guid productId)
         {
             var productDto = await _productAppService.GetAsync(productId);
 
-            Product = ObjectMapper.Map<ProductDto, ProductEditModalView>(productDto);
+            Product = ObjectMapper.Map<ProductDto, ProductEditViewModel>(productDto);
 
             return Page();
         }
@@ -44,7 +37,7 @@ namespace ProductManagement.Pages.ProductManagement.Products
             });
         }
 
-        public class ProductEditModalView
+        public class ProductEditViewModel
         {
             [HiddenInput]
             [Required]
@@ -53,6 +46,9 @@ namespace ProductManagement.Pages.ProductManagement.Products
             [Required]
             [StringLength(ProductConsts.MaxNameLength)]
             public string Name { get; set; }
+
+            [StringLength(ProductConsts.MaxImageNameLength)]
+            public string ImageName { get; set; }
 
             public float Price { get; set; }
 

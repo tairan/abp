@@ -4,6 +4,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp.AspNetCore.Mvc.Localization;
 using Volo.Abp.AspNetCore.Mvc.UI.Bootstrap;
 using Volo.Abp.AutoMapper;
+using Volo.Abp.FeatureManagement;
+using Volo.Abp.FeatureManagement.Localization;
 using Volo.Abp.Localization;
 using Volo.Abp.Localization.Resources.AbpValidation;
 using Volo.Abp.Modularity;
@@ -16,6 +18,7 @@ namespace Volo.Abp.TenantManagement.Web
 {
     [DependsOn(typeof(AbpTenantManagementHttpApiModule))]
     [DependsOn(typeof(AbpAspNetCoreMvcUiBootstrapModule))]
+    [DependsOn(typeof(AbpFeatureManagementWebModule))]
     [DependsOn(typeof(AbpAutoMapperModule))]
     public class AbpTenantManagementWebModule : AbpModule
     {
@@ -45,6 +48,7 @@ namespace Volo.Abp.TenantManagement.Web
                     .Get<AbpTenantManagementResource>()
                     .AddBaseTypes(
                         typeof(AbpValidationResource),
+                        typeof(AbpFeatureManagementResource),
                         typeof(AbpUiResource)
                     ).AddVirtualJson("/Localization/Resources/AbpTenantManagement/Web");
             });
@@ -59,6 +63,7 @@ namespace Volo.Abp.TenantManagement.Web
                 options.Conventions.AuthorizePage("/TenantManagement/Tenants/Index", TenantManagementPermissions.Tenants.Default);
                 options.Conventions.AuthorizePage("/TenantManagement/Tenants/CreateModal", TenantManagementPermissions.Tenants.Create);
                 options.Conventions.AuthorizePage("/TenantManagement/Tenants/EditModal", TenantManagementPermissions.Tenants.Update);
+                options.Conventions.AuthorizePage("/TenantManagement/Tenants/ConnectionStrings", TenantManagementPermissions.Tenants.ManageConnectionStrings);
             });
         }
     }

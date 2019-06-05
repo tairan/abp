@@ -1,4 +1,5 @@
 ﻿using Volo.Abp.AspNetCore.Mvc.UI.Bundling;
+using Volo.Abp.AspNetCore.Mvc.UI.MultiTenancy;
 using Volo.Abp.AspNetCore.Mvc.UI.Theme.Basic.Bundling;
 using Volo.Abp.AspNetCore.Mvc.UI.Theme.Basic.Toolbars;
 using Volo.Abp.AspNetCore.Mvc.UI.Theme.Shared;
@@ -11,7 +12,8 @@ using Volo.Abp.VirtualFileSystem;
 namespace Volo.Abp.AspNetCore.Mvc.UI.Theme.Basic
 {
     [DependsOn(
-        typeof(AbpAspNetCoreMvcUiThemeSharedModule)
+        typeof(AbpAspNetCoreMvcUiThemeSharedModule),
+        typeof(AbpAspNetCoreMvcUiMultiTenancyModule)
         )]
     public class AbpAspNetCoreMvcUiBasicThemeModule : AbpModule
     {
@@ -52,7 +54,9 @@ namespace Volo.Abp.AspNetCore.Mvc.UI.Theme.Basic
                     .ScriptBundles
                     .Add(BasicThemeBundles.Scripts.Global, bundle =>
                     {
-                        bundle.AddBaseBundles(StandardBundles.Scripts.Global);
+                        bundle
+                            .AddBaseBundles(StandardBundles.Scripts.Global)
+                            .AddContributors(typeof(BasicThemeGlobalScriptContributor));
                     });
             });
         }

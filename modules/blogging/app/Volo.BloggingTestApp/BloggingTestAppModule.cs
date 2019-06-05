@@ -13,22 +13,25 @@ using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.Swagger;
 using Volo.Abp;
 using Volo.Abp.Account.Web;
-using Volo.Abp.AspNetCore.Modularity;
 using Volo.Abp.AspNetCore.Mvc.UI;
 using Volo.Abp.AspNetCore.Mvc.UI.Bootstrap;
 using Volo.Abp.AspNetCore.Mvc.UI.Theme.Basic;
 using Volo.Abp.AspNetCore.Mvc.UI.Theme.Shared;
 using Volo.Abp.AspNetCore.Mvc.UI.Theming;
+using Volo.Abp.Authorization.Permissions;
 using Volo.Abp.Autofac;
 using Volo.Abp.Data;
 using Volo.Abp.EntityFrameworkCore;
 using Volo.Abp.Identity;
 using Volo.Abp.Identity.Web;
 using Volo.Abp.Modularity;
+using Volo.Abp.PermissionManagement;
+using Volo.Abp.PermissionManagement.Identity;
 using Volo.Abp.Threading;
 using Volo.Abp.UI;
 using Volo.Abp.VirtualFileSystem;
 using Volo.Blogging;
+using Volo.Blogging.Files;
 using Volo.BloggingTestApp.EntityFrameworkCore;
 using Volo.BloggingTestApp.MongoDb;
 
@@ -45,6 +48,8 @@ namespace Volo.BloggingTestApp
         typeof(AbpAccountWebModule),
         typeof(AbpIdentityWebModule),
         typeof(AbpIdentityApplicationModule),
+        typeof(AbpPermissionManagementDomainIdentityModule),
+        typeof(AbpPermissionManagementApplicationModule),
         typeof(AbpAutofacModule),
         typeof(AbpAspNetCoreMvcUiBasicThemeModule)
     )]
@@ -93,7 +98,14 @@ namespace Volo.BloggingTestApp
                     options.CustomSchemaIds(type => type.FullName);
                 });
 
-            var cultures = new List<CultureInfo> { new CultureInfo("en"), new CultureInfo("tr") };
+            var cultures = new List<CultureInfo> 
+            { 
+                new CultureInfo("cs"), 
+                new CultureInfo("en"), 
+                new CultureInfo("tr"), 
+                new CultureInfo("zh-Hans") 
+            };
+
             Configure<RequestLocalizationOptions>(options =>
             {
                 options.DefaultRequestCulture = new RequestCulture("en");
@@ -104,6 +116,11 @@ namespace Volo.BloggingTestApp
             Configure<ThemingOptions>(options =>
             {
                 options.DefaultThemeName = BasicTheme.Name;
+            });
+
+            Configure<BlogFileOptions>(options =>
+            {
+                options.FileUploadLocalFolder = Path.Combine(hostingEnvironment.WebRootPath, "files");
             });
         }
 
@@ -143,15 +160,16 @@ namespace Volo.BloggingTestApp
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
 
-            AsyncHelper.RunSync(async () =>
+
+            using (var scope = context.ServiceProvider.CreateScope())
             {
-                await context.ServiceProvider
-                    .GetRequiredService<IIdentityDataSeeder>()
-                    .SeedAsync(
-                        "1q2w3E*",
-                        IdentityPermissions.GetAll().Union(BloggingPermissions.GetAll())
-                    );
-            });
+                AsyncHelper.RunSync(async () =>
+                {
+                    await scope.ServiceProvider
+                        .GetRequiredService<IDataSeeder>()
+                        .SeedAsync();
+                });
+            }
         }
     }
 }

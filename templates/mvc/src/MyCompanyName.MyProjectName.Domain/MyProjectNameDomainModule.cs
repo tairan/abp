@@ -1,44 +1,37 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using MyCompanyName.MyProjectName.Localization.MyProjectName;
-using MyCompanyName.MyProjectName.Settings;
-using Volo.Abp.Auditing;
+﻿using MyCompanyName.MyProjectName.MultiTenancy;
 using Volo.Abp.AuditLogging;
 using Volo.Abp.BackgroundJobs;
+using Volo.Abp.FeatureManagement;
 using Volo.Abp.Identity;
-using Volo.Abp.Localization;
-using Volo.Abp.Localization.Resources.AbpValidation;
+using Volo.Abp.IdentityServer;
 using Volo.Abp.Modularity;
-using Volo.Abp.Settings;
-using Volo.Abp.VirtualFileSystem;
+using Volo.Abp.MultiTenancy;
+using Volo.Abp.PermissionManagement.Identity;
+using Volo.Abp.PermissionManagement.IdentityServer;
+using Volo.Abp.SettingManagement;
+using Volo.Abp.TenantManagement;
 
 namespace MyCompanyName.MyProjectName
 {
     [DependsOn(
-        typeof(AbpIdentityDomainModule),
-        typeof(AbpAuditingModule),
+        typeof(MyProjectNameDomainSharedModule),
+        typeof(AbpAuditLoggingDomainModule),
         typeof(BackgroundJobsDomainModule),
-        typeof(AbpAuditLoggingDomainModule)
+        typeof(AbpFeatureManagementDomainModule),
+        typeof(AbpIdentityDomainModule),
+        typeof(AbpPermissionManagementDomainIdentityModule),
+        typeof(AbpIdentityServerDomainModule),
+        typeof(AbpPermissionManagementDomainIdentityServerModule),
+        typeof(AbpSettingManagementDomainModule),
+        typeof(AbpTenantManagementDomainModule)
         )]
     public class MyProjectNameDomainModule : AbpModule
     {
         public override void ConfigureServices(ServiceConfigurationContext context)
         {
-            Configure<VirtualFileSystemOptions>(options =>
+            Configure<MultiTenancyOptions>(options =>
             {
-                options.FileSets.AddEmbedded<MyProjectNameDomainModule>();
-            });
-
-            Configure<AbpLocalizationOptions>(options =>
-            {
-                options.Resources
-                    .Add<MyProjectNameResource>("en")
-                    .AddBaseTypes(typeof(AbpValidationResource))
-                    .AddVirtualJson("/Localization/MyProjectName");
-            });
-
-            Configure<SettingOptions>(options =>
-            {
-                options.DefinitionProviders.Add<MyProjectNameSettingDefinitionProvider>();
+                options.IsEnabled = MultiTenancyConsts.IsEnabled;
             });
         }
     }

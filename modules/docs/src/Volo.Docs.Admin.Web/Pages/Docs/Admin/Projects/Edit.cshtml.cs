@@ -38,10 +38,8 @@ namespace Volo.Docs.Admin.Pages.Docs.Admin.Projects
                 SetGithubProjectFromDto(project);
                 return Page();
             }
-            else
-            {
-                throw new BusinessException("UnknowDocumentSourceExceptionMessage");
-            }
+
+            throw new BusinessException("UnknowDocumentSourceExceptionMessage");
         }
 
         public async Task<IActionResult> OnPostAsync()
@@ -62,6 +60,7 @@ namespace Volo.Docs.Admin.Pages.Docs.Admin.Projects
             dto.ExtraProperties = new Dictionary<string, object>
             {
                 {nameof(GithubProject.GitHubRootUrl), GithubProject.GitHubRootUrl},
+                {nameof(GithubProject.GitHubUserAgent), GithubProject.GitHubUserAgent},
                 {nameof(GithubProject.GitHubAccessToken), GithubProject.GitHubAccessToken}
             };
 
@@ -74,6 +73,7 @@ namespace Volo.Docs.Admin.Pages.Docs.Admin.Projects
 
             GithubProject.GitHubAccessToken = (string) dto.ExtraProperties[nameof(GithubProject.GitHubAccessToken)];
             GithubProject.GitHubRootUrl = (string) dto.ExtraProperties[nameof(GithubProject.GitHubRootUrl)];
+            GithubProject.GitHubUserAgent = (string) dto.ExtraProperties[nameof(GithubProject.GitHubUserAgent)];
         }
 
         public abstract class EditProjectViewModelBase
@@ -116,6 +116,11 @@ namespace Volo.Docs.Admin.Pages.Docs.Admin.Projects
             [DisplayOrder(10001)]
             [StringLength(512)]
             public string GitHubAccessToken { get; set; }
+
+
+            [DisplayOrder(10002)]
+            [StringLength(64)]
+            public string GitHubUserAgent { get; set; }
         }
     }
 }
