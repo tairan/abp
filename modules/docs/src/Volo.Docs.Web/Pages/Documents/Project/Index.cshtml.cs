@@ -3,16 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Options;
+using Volo.Abp.AspNetCore.Mvc.UI.RazorPages;
 using Volo.Docs.Documents;
-using Volo.Docs.Formatting;
+using Volo.Docs.HtmlConverting;
 using Volo.Docs.Models;
 using Volo.Docs.Projects;
 
 namespace Volo.Docs.Pages.Documents.Project
 {
-    public class IndexModel : PageModel
+    public class IndexModel : AbpPageModel
     {
         [BindProperty(SupportsGet = true)]
         public string ProjectName { get; set; }
@@ -23,54 +24,197 @@ namespace Volo.Docs.Pages.Documents.Project
         [BindProperty(SupportsGet = true)]
         public string DocumentName { get; set; }
 
-        public string ProjectDisplayName { get; set; }
+        [BindProperty(SupportsGet = true)]
+        public string LanguageCode { get; set; }
 
-        public string ProjectFormat { get; private set; }
+        public string DefaultLanguageCode { get; set; }
+
+        public ProjectDto Project { get; set; }
+
+        public LanguageConfig LanguageConfig { get; set; }
+
+        public List<SelectListItem> LanguageSelectListItems { get; set; }
 
         public string DocumentNameWithExtension { get; private set; }
 
         public DocumentWithDetailsDto Document { get; private set; }
 
-        public List<VersionInfo> Versions { get; private set; }
-
         public List<SelectListItem> VersionSelectItems { get; private set; }
+
+        public List<SelectListItem> ProjectSelectItems { get; private set; }
 
         public NavigationWithDetailsDto Navigation { get; private set; }
 
-        public VersionInfo LatestVersionInfo { get; private set; }
+        public VersionInfoViewModel LatestVersionInfo { get; private set; }
+
+        public string DocumentsUrlPrefix { get; set; }
+
+        public bool DocumentLanguageIsDifferent { get; set; }
 
         private readonly IDocumentAppService _documentAppService;
-        private readonly IDocumentConverterFactory _documentConverterFactory;
+        private readonly IDocumentToHtmlConverterFactory _documentToHtmlConverterFactory;
         private readonly IProjectAppService _projectAppService;
+        private readonly DocsUrlOptions _options;
 
         public IndexModel(
-            IDocumentAppService documentAppService, 
-            IDocumentConverterFactory documentConverterFactory, 
-            IProjectAppService projectAppService)
+            IDocumentAppService documentAppService,
+            IDocumentToHtmlConverterFactory documentToHtmlConverterFactory,
+            IProjectAppService projectAppService,
+            IOptions<DocsUrlOptions> options)
         {
             _documentAppService = documentAppService;
-            _documentConverterFactory = documentConverterFactory;
+            _documentToHtmlConverterFactory = documentToHtmlConverterFactory;
             _projectAppService = projectAppService;
+            _options = options.Value;
         }
 
-        public async Task OnGet()
+        public async Task<IActionResult> OnGetAsync()
         {
-            var project = await _projectAppService.GetByShortNameAsync(ProjectName);
+            DocumentsUrlPrefix = _options.GetFormattedRoutePrefix();
 
-            SetPageParams(project);
+            await SetProjectAsync();
+            await SetProjectsAsync();
+            await SetVersionAsync();
+            await SetLanguageList();
 
-            await SetVersionAsync(project);
+            if (IsDefaultDocument())
+            {
+                return RedirectToDefaultDocument();
+            }
+
+            if (!CheckLanguage())
+            {
+                return RedirectToDefaultLanguage();
+            }
 
             await SetDocumentAsync();
-
             await SetNavigationAsync();
+            SetLanguageSelectListItems();
+
+            return Page();
+        }
+
+        private bool IsDefaultDocument()
+        {
+            return DocumentName == Project.DefaultDocumentName;
+        }
+
+        private async Task SetProjectAsync()
+        {
+            Project = await _projectAppService.GetAsync(ProjectName);
+        }
+
+        private async Task SetLanguageList()
+        {
+            LanguageConfig = await _projectAppService.GetLanguageListAsync(ProjectName, Version);
+            SetDefaultLanguageCode();
+        }
+
+        private void SetDefaultLanguageCode()
+        {
+            DefaultLanguageCode = (LanguageConfig.Languages.FirstOrDefault(l => l.IsDefault) ?? LanguageConfig.Languages.First()).Code;
+        }
+
+        private bool CheckLanguage()
+        {
+            return LanguageConfig.Languages.Any(l => l.Code == LanguageCode);
+        }
+
+        private IActionResult RedirectToDefaultLanguage()
+        {
+            return RedirectToPage(new
+            {
+                projectName = ProjectName,
+                version = Version,
+                languageCode = DefaultLanguageCode
+            });
+        }
+
+        private IActionResult RedirectToDefaultDocument()
+        {
+            return RedirectToPage(new
+            {
+                projectName = ProjectName,
+                version = Version,
+                documentName = "",
+                languageCode = DefaultLanguageCode
+            });
+        }
+
+        private async Task SetProjectsAsync()
+        {
+            var projects = await _projectAppService.GetListAsync();
+
+            ProjectSelectItems = projects.Items.Select(p => new SelectListItem
+            {
+                Text = p.Name,
+                Value = p.Id != Project.Id ? "/documents/" + LanguageCode + "/" + p.ShortName + "/" + DocsAppConsts.Latest : null,
+                Selected = p.Id == Project.Id
+            }).ToList();
+        }
+
+        private async Task SetVersionAsync()
+        {
+            //TODO: Needs refactoring
+            if (string.IsNullOrWhiteSpace(Version))
+            {
+                Version = DocsAppConsts.Latest;
+            }
+
+            var output = await _projectAppService.GetVersionsAsync(Project.ShortName);
+            var versions = output.Items
+                .Select(v => new VersionInfoViewModel(v.DisplayName, v.Name))
+                .ToList();
+
+            if (versions.Any())
+            {
+                LatestVersionInfo = versions.First();
+                LatestVersionInfo.DisplayText = $"{LatestVersionInfo.DisplayText} ({DocsAppConsts.Latest})";
+                LatestVersionInfo.Version = LatestVersionInfo.Version;
+
+                if (string.Equals(Version, DocsAppConsts.Latest, StringComparison.OrdinalIgnoreCase))
+                {
+                    LatestVersionInfo.IsSelected = true;
+                    Version = LatestVersionInfo.Version;
+                }
+                else
+                {
+                    var versionFromUrl = versions.FirstOrDefault(v => v.Version == Version);
+                    if (versionFromUrl != null)
+                    {
+                        versionFromUrl.IsSelected = true;
+                        Version = versionFromUrl.Version;
+                    }
+                    else
+                    {
+                        versions.First().IsSelected = true;
+                        Version = versions.First().Version;
+                    }
+                }
+            }
+
+            VersionSelectItems = versions.Select(v => new SelectListItem
+            {
+                Text = v.DisplayText,
+                Value = CreateVersionLink(LatestVersionInfo, v.Version, DocumentName),
+                Selected = v.IsSelected
+            }).ToList();
         }
 
         private async Task SetNavigationAsync()
         {
             try
             {
-                Navigation = await _documentAppService.GetNavigationDocumentAsync(ProjectName, Version, false);
+                var document = await _documentAppService.GetNavigationAsync(
+                    new GetNavigationDocumentInput
+                    {
+                        ProjectId = Project.Id,
+                        LanguageCode = LanguageCode,
+                        Version = Version
+                    }
+                );
+
+                Navigation = ObjectMapper.Map<DocumentWithDetailsDto, NavigationWithDetailsDto>(document);
             }
             catch (DocumentNotFoundException) //TODO: What if called on a remote service which may return 404
             {
@@ -80,63 +224,14 @@ namespace Volo.Docs.Pages.Documents.Project
             Navigation.ConvertItems();
         }
 
-        private void SetPageParams(ProjectDto project)
+        public string CreateVersionLink(VersionInfoViewModel latestVersion, string version, string documentName = null)
         {
-            ProjectFormat = project.Format;
-            ProjectDisplayName = project.Name;
-
-            if (DocumentName.IsNullOrWhiteSpace())
-            {
-                DocumentName = project.DefaultDocumentName;
-            }
-
-            DocumentNameWithExtension = DocumentName + "." + project.Format;
-        }
-
-        private async Task SetVersionAsync(ProjectDto project)
-        {
-            var versionInfoDtos = await _documentAppService.GetVersions(project.ShortName);
-
-            Versions = versionInfoDtos.Select(v => new VersionInfo(v.DisplayName, v.Name)).ToList();
-
-            LatestVersionInfo = GetLatestVersion();
-
-            if (string.Equals(Version, DocsAppConsts.Latest, StringComparison.OrdinalIgnoreCase))
-            {
-                LatestVersionInfo.IsSelected = true;
-                Version = LatestVersionInfo.Version;
-            }
-            else
-            {
-                var versionFromUrl = Versions.FirstOrDefault(v => v.Version == Version);
-                if (versionFromUrl != null)
-                {
-                    versionFromUrl.IsSelected = true;
-                    Version = versionFromUrl.Version;
-                }
-                else
-                {
-                    Versions.First().IsSelected = true;
-                    Version = Versions.First().Version;
-                }
-            }
-
-            VersionSelectItems = Versions.Select(v => new SelectListItem
-            {
-                Text = v.DisplayText,
-                Value = CreateLink(LatestVersionInfo, v.Version, DocumentName),
-                Selected = v.IsSelected
-            }).ToList();
-        }
-
-        public string CreateLink(VersionInfo latestVersion, string version, string documentName = null)
-        {
-            if (latestVersion.Version == version)
+            if (latestVersion == null || latestVersion.Version == version)
             {
                 version = DocsAppConsts.Latest;
             }
 
-            var link = "/documents/" + ProjectName + "/" + version;
+            var link = DocumentsUrlPrefix + LanguageCode + "/" + ProjectName + "/" + version;
 
             if (documentName != null)
             {
@@ -144,16 +239,6 @@ namespace Volo.Docs.Pages.Documents.Project
             }
 
             return link;
-        }
-
-        private VersionInfo GetLatestVersion()
-        {
-            var latestVersion = Versions.First();
-
-            latestVersion.DisplayText = $"{latestVersion.DisplayText} ({DocsAppConsts.Latest})";
-            latestVersion.Version = latestVersion.Version;
-
-            return latestVersion;
         }
 
         public string GetSpecificVersionOrLatest()
@@ -170,32 +255,94 @@ namespace Volo.Docs.Pages.Documents.Project
 
         private async Task SetDocumentAsync()
         {
+            DocumentNameWithExtension = DocumentName + "." + Project.Format;
+
             try
             {
-                if (DocumentNameWithExtension.IsNullOrWhiteSpace())
+                if (DocumentName.IsNullOrWhiteSpace())
                 {
-                    Document = await _documentAppService.GetDefaultAsync(ProjectName, Version, true);
+                    Document = await _documentAppService.GetDefaultAsync(
+                        new GetDefaultDocumentInput
+                        {
+                            ProjectId = Project.Id,
+                            LanguageCode = LanguageCode,
+                            Version = Version
+                        }
+                    );
                 }
                 else
                 {
-                    Document = await _documentAppService.GetByNameAsync(ProjectName, DocumentNameWithExtension, Version, true);
+                    Document = await _documentAppService.GetAsync(
+                        new GetDocumentInput
+                        {
+                            ProjectId = Project.Id,
+                            Name = DocumentNameWithExtension,
+                            LanguageCode = LanguageCode,
+                            Version = Version
+                        }
+                    );
                 }
             }
             catch (DocumentNotFoundException)
             {
-                return;
+                if (LanguageCode != DefaultLanguageCode)
+                {
+                    Document = await _documentAppService.GetAsync(
+                        new GetDocumentInput
+                        {
+                            ProjectId = Project.Id,
+                            Name = DocumentNameWithExtension,
+                            LanguageCode = DefaultLanguageCode,
+                            Version = Version
+                        }
+                    );
+
+                    DocumentLanguageIsDifferent = true;
+                }
+                else
+                {
+                    throw;
+                }
             }
-           
-            var converter = _documentConverterFactory.Create(Document.Format ?? ProjectFormat);
 
-            var content = converter.NormalizeLinks(Document.Content, Document.Project.ShortName, GetSpecificVersionOrLatest(), Document.LocalDirectory);
-            content = converter.Convert(content);
+            ConvertDocumentContentToHtml();
+        }
 
-            content = HtmlNormalizer.ReplaceImageSources(content, Document.RawRootUrl, Document.LocalDirectory);
-            content = HtmlNormalizer.ReplaceCodeBlocksLanguage(content, "language-C#", "language-csharp"); //todo find a way to make it on client in prismJS configuration (eg: map C# => csharp)
+        private void SetLanguageSelectListItems()
+        {
+            LanguageSelectListItems = new List<SelectListItem>();
+
+            foreach (var language in LanguageConfig.Languages)
+            {
+                LanguageSelectListItems.Add(
+                    new SelectListItem(
+                        language.DisplayName,
+                        "/" + DocumentsUrlPrefix + language.Code + "/" + Project.ShortName + "/" + Version + "/" + DocumentName,
+                        language.Code == LanguageCode
+                        )
+                    );
+            }
+        }
+
+        private void ConvertDocumentContentToHtml()
+        {
+            var converter = _documentToHtmlConverterFactory.Create(Document.Format ?? Project.Format);
+            var content = converter.Convert(Project, Document, GetSpecificVersionOrLatest(), LanguageCode);
+
+            content = HtmlNormalizer.ReplaceImageSources(
+                content,
+                Document.RawRootUrl,
+                Document.LocalDirectory
+            );
+
+            //todo find a way to make it on client in prismJS configuration (eg: map C# => csharp)
+            content = HtmlNormalizer.ReplaceCodeBlocksLanguage(
+                content,
+                "language-C#",
+                "language-csharp"
+            );
 
             Document.Content = content;
         }
-
     }
 }
