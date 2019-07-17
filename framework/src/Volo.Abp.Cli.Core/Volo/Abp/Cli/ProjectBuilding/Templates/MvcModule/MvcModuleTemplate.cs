@@ -14,7 +14,7 @@ namespace Volo.Abp.Cli.ProjectBuilding.Templates.MvcModule
         public MvcModuleTemplate()
             : base(TemplateName)
         {
-            
+            DocumentUrl = "https://docs.abp.io/en/abp/latest/Startup-Templates/Mvc-Module";
         }
 
         public override IEnumerable<ProjectBuildPipelineStep> GetCustomSteps(ProjectBuildContext context)
@@ -22,6 +22,14 @@ namespace Volo.Abp.Cli.ProjectBuilding.Templates.MvcModule
             var steps = new List<ProjectBuildPipelineStep>();
 
             DeleteUnrelatedProjects(context, steps);
+
+            steps.Add(new TemplateRandomSslPortStep(new List<string>
+            {
+                "https://localhost:44300",
+                "https://localhost:44301",
+                "https://localhost:44302",
+                "https://localhost:44303"
+            }));
 
             return steps;
         }

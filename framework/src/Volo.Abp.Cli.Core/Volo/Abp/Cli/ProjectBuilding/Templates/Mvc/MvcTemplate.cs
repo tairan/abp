@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Volo.Abp.Cli.ProjectBuilding.Building;
 using Volo.Abp.Cli.ProjectBuilding.Building.Steps;
+using Volo.Abp.Cli.ProjectBuilding.Templates.MvcModule;
 
 namespace Volo.Abp.Cli.ProjectBuilding.Templates.Mvc
 {
@@ -14,7 +15,7 @@ namespace Volo.Abp.Cli.ProjectBuilding.Templates.Mvc
         public MvcTemplate()
             : base(TemplateName, DatabaseProvider.EntityFrameworkCore)
         {
-
+            DocumentUrl = "https://docs.abp.io/en/abp/latest/Startup-Templates/Mvc";
         }
 
         public override IEnumerable<ProjectBuildPipelineStep> GetCustomSteps(ProjectBuildContext context)
@@ -23,6 +24,14 @@ namespace Volo.Abp.Cli.ProjectBuilding.Templates.Mvc
 
             SwitchDatabaseProvider(context, steps);
             DeleteUnrelatedProjects(context, steps);
+
+            steps.Add(new TemplateRandomSslPortStep(new List<string>
+            {
+                "https://localhost:44300",
+                "https://localhost:44301",
+                "https://localhost:44302",
+                "https://localhost:44303"
+            }));
 
             return steps;
         }
